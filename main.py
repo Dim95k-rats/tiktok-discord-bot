@@ -5,7 +5,8 @@ import threading
 import json
 import os
 from datetime import datetime
-
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
 # TOKEN via Railway
 TOKEN = os.getenv("TOKEN")
 
