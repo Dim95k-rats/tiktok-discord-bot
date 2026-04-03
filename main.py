@@ -5,13 +5,11 @@ import threading
 import json
 import os
 from datetime import datetime
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
-# TOKEN via Railway
+
+# TOKEN
 TOKEN = os.getenv("TOKEN")
 
-# ---------------- CONFIG ----------------
-
+# CONFIG
 POINTS = {
     "comment": 5,
     "like": 1,
@@ -21,20 +19,17 @@ POINTS = {
 
 DATA_FILE = "data.json"
 
-# ---------------- DISCORD ----------------
-
+# DISCORD
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ---------------- FLASK ----------------
-
+# FLASK
 app = Flask(__name__)
 
-# ---------------- DATA ----------------
-
+# DATA
 def load_data():
     if not os.path.exists(DATA_FILE):
         return {"users": {}, "links": {}, "last_reset": str(datetime.now().month)}
@@ -45,8 +40,7 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-# ---------------- RESET ----------------
-
+# RESET
 def check_reset():
     data = load_data()
     current_month = str(datetime.now().month)
@@ -56,21 +50,18 @@ def check_reset():
         data["last_reset"] = current_month
         save_data(data)
 
-# ---------------- POINTS ----------------
-
+# POINTS
 def add_points(username, amount):
     check_reset()
     data = load_data()
 
     username = username.lower()
-
     data["users"][username] = data["users"].get(username, 0) + amount
     save_data(data)
 
     return data["users"][username]
 
-# ---------------- ROLES ----------------
-
+# ROLES
 async def update_roles(guild, discord_id, points):
     member = guild.get_member(int(discord_id))
     if not member:
@@ -88,8 +79,7 @@ async def update_roles(guild, discord_id, points):
         if role and points >= req and role not in member.roles:
             await member.add_roles(role)
 
-# ---------------- WEBHOOK ----------------
-
+# WEBHOOK
 @app.route('/tiktok', methods=['POST'])
 def tiktok():
     data = request.json
@@ -109,8 +99,7 @@ def tiktok():
 
     return {"status": "ok"}
 
-# ---------------- COMMANDES ----------------
-
+# COMMANDES
 @bot.command()
 async def link(ctx, tiktok_name):
     data = load_data()
@@ -145,11 +134,12 @@ async def top(ctx):
 
     await ctx.send(msg)
 
-# ---------------- RUN ----------------
-
+# RUN FLASK
 def run_flask():
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
 
 threading.Thread(target=run_flask).start()
 
+# RUN BOT
 bot.run(TOKEN)
